@@ -1,0 +1,191 @@
+# 主配置文件
+spring:
+  application:
+    name: interview-assistant
+
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/interview_assistant?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  # JPA配置
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+  # 模板路径配置
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  tomcat:
+    uri-encoding: UTF-8
+    max-threads: 200
+    max-http-form-post-size: 10MB
+
+# 爬虫配置
+crawler:
+  thread-num: 5
+  retry-times: 3
+  sleep-time: 1000
+  timeout: 10000
+  user-agent-list:
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15"
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"
+    - "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
+  use-proxy: false
+  proxy-list: []
+
+  # 爬虫调度配置
+  scheduler:
+    enabled: false
+    job-keywords: "Java,Python,Go,前端,后端,全栈,数据分析,算法,人工智能"
+    cities: "北京,上海,广州,深圳,杭州,成都"
+    companies: "阿里,腾讯,字节,百度,美团,京东,滴滴,华为"
+
+  # 牛客网爬虫配置
+  nowcoder:
+    base-url: "https://www.nowcoder.com/discuss/experience?tagId=639"
+    company-url: "https://www.nowcoder.com/discuss/experience?tagId=639&companyName=%s"
+    position-url: "https://www.nowcoder.com/discuss/experience?tagId=639&query=%s"
+    tag-url: "https://www.nowcoder.com/discuss/tag/%s"
+    list-url-pattern: ".*nowcoder.com/discuss/experience.*"
+    detail-url-pattern: ".*nowcoder.com/discuss/\\d+.*"
+
+  # Boss直聘爬虫配置
+  boss:
+    base-url: "https://www.zhipin.com/c101010100-p100101/"
+    keyword-url: "https://www.zhipin.com/job_detail/?query=%s"
+    city-url: "https://www.zhipin.com/c%s-p100101/"
+    keyword-city-url: "https://www.zhipin.com/job_detail/?query=%s&city=%s"
+    list-url-pattern: ".*zhipin.com/(job_detail|c\\d+).*"
+    detail-url-pattern: ".*zhipin.com/job_detail/.*"
+
+# RAG配置
+rag:
+  collection:
+    interview: "interview_knowledge"
+    job: "job_knowledge"
+
+  embedding:
+    dimensions: 1536
+    model: "text-embedding-ada-002"
+    api-key: "${OPENAI_API_KEY}"
+    api-url: "https://api.openai.com/v1/embeddings"
+
+  text-splitter:
+    chunk-size: 1000
+    chunk-overlap: 200
+
+# OpenAI配置
+openai:
+  api-key: "${OPENAI_API_KEY}"
+  model: "gpt-3.5-turbo"
+  embedding-model: "text-embedding-ada-002"
+  api-url: "https://api.openai.com"
+  timeout: 60
+  max-tokens: 2048
+  temperature: 0.7
+
+# 提示词配置
+prompt:
+  template:
+    path: "classpath:templates"
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.interview: DEBUG
+    org.springframework: INFO
+    org.hibernate: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/interview-assistant.log
+    max-size: 10MB
+    max-history: 30
+
+# 开发环境配置
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/interview_assistant_dev?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: dev
+    password: dev_password
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: 8081
+
+logging:
+  level:
+    com.interview: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+crawler:
+  scheduler:
+    enabled: false
+
+# 生产环境配置
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:mysql://mysql-server:3306/interview_assistant_prod?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.interview: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+
+crawler:
+  scheduler:
+    enabled: true
